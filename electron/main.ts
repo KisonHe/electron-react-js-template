@@ -27,9 +27,6 @@ function createWindow() {
     const tmp = require('tmp');
     const webContents = event.sender
     const window = BrowserWindow.fromWebContents(webContents);
-    const tmpobj = tmp.fileSync();
-    console.log('File: ', tmpobj.name);
-    console.log('Filedescriptor: ', tmpobj.fd);
     const fs = require('fs');
 
     let content = '';
@@ -43,9 +40,10 @@ function createWindow() {
       content = content + 'loadfile ' + config.app_bin + '\n';
     }
     content = content + 'exit\n';
-
+    const appPath=app.getAppPath();
+    const configFilePath = appPath+'/command.jlink';
     try {
-      fs.writeFileSync(tmpobj.name, content);
+      fs.writeFileSync(configFilePath, content);
       // file written successfully
     } catch (err) {
       console.error(err);
@@ -53,7 +51,7 @@ function createWindow() {
 
     // @ts-ignore
     // window.setTitle(title)
-    execute(config.jlinkexe+' -device AT32F403AVGT7 -if SWD -speed 4000 -autoconnect 1 -CommanderScript '+tmpobj.name, (output) => {
+    execute('&\''+config.jlinkexe+'\' -device STM32F103C8 -if SWD -speed 4000 -autoconnect 1 -CommanderScript \''+configFilePath+"\'", (output) => {
       console.log(output);
     });
   })
