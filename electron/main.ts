@@ -49,9 +49,12 @@ function createWindow() {
       console.error(err);
     }
 
+    const cmd = '\"'+config.jlinkexe+'\" -device STM32F103C8 -if SWD -speed 4000 -autoconnect 1 -CommanderScript \"'+configFilePath+"\"";
+    console.log(cmd);
+
     // @ts-ignore
     // window.setTitle(title)
-    execute('&\''+config.jlinkexe+'\' -device STM32F103C8 -if SWD -speed 4000 -autoconnect 1 -CommanderScript \''+configFilePath+"\'", (output) => {
+    execute(cmd, (output) => {
       console.log(output);
     });
   })
