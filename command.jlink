@@ -1,0 +1,3 @@
+loadfile /home/kisonhe/Downloads/bootloader.hex
+loadfile /home/kisonhe/Downloads/sandbox_main_control_BootloaderVersion.hex
+exit
