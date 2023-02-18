@@ -10,6 +10,10 @@ function execute(command: string, callback: { (output: any): void; (arg0: any): 
   });
 }
 
+const delay = (delayInms: number | undefined) => {
+  return new Promise(resolve => setTimeout(resolve, delayInms));
+}
+
 function createWindow() {
   const win = new BrowserWindow({
     width: 800,
@@ -20,8 +24,8 @@ function createWindow() {
     }
   })
 
-  ipcMain.on('run-jlink', (event, config) => {
-    if ((!config.hasOwnProperty('jlinkexe'))||(config.jlinkexe.length<1)){
+  ipcMain.on('run-jlink', async (event, config) => {
+    if ((!config.hasOwnProperty('jlinkexe')) || (config.jlinkexe.length < 1)) {
       return;
     }
     const tmp = require('tmp');
@@ -30,53 +34,69 @@ function createWindow() {
     const fs = require('fs');
 
     let content = '';
-    if (config.hasOwnProperty('bootloader_bin')&&config.bootloader_bin.length>1){
-      content = content + 'loadfile ' + config.bootloader_bin + '\n';
-    }
-    if (config.hasOwnProperty('sector_table_bin')&&config.sector_table_bin.length>1){
-      content = content + 'loadfile ' + config.sector_table_bin + '\n';
-    }
-    if (config.hasOwnProperty('app_bin')&&config.app_bin.length>1){
-      content = content + 'loadfile ' + config.app_bin + '\n';
-    }
-    content = content + 'exit\n';
-    const appPath=app.getAppPath();
-    const configFilePath = appPath+'/command.jlink';
-    try {
-      fs.writeFileSync(configFilePath, content);
-      // file written successfully
-    } catch (err) {
-      console.error(err);
-    }
-
-    const cmd = '\"'+config.jlinkexe+'\" -device STM32F103C8 -if SWD -speed 4000 -autoconnect 1 -CommanderScript \"'+configFilePath+"\"";
+    const appPath = app.getAppPath();
+    const configFilePath = appPath + '/command.jlink';
+    const cmd = '\"' + config.jlinkexe + '\" -device STM32F103C8 -if SWD -speed 4000 -autoconnect 1 -CommanderScript \"' + configFilePath + "\"";
     console.log(cmd);
-
-    // @ts-ignore
-    // window.setTitle(title)
-    execute(cmd, (output) => {
-      console.log(output);
-    });
+    if (config.hasOwnProperty('bootloader_bin') && config.bootloader_bin.length > 1) {
+      content = content + 'loadfile ' + config.bootloader_bin + '\n' + 'exit\n';
+      try {
+        fs.writeFileSync(configFilePath, content);
+        // file written successfully
+      } catch (err) {
+        console.error(err);
+      }
+      execute(cmd, (output) => {
+        console.log(output);
+      });
+      let delayres = await delay(3000);
+    }
+    if (config.hasOwnProperty('sector_table_bin') && config.sector_table_bin.length > 1) {
+      content = content + 'loadfile ' + config.sector_table_bin + '\n' + 'exit\n';
+      try {
+        fs.writeFileSync(configFilePath, content);
+        // file written successfully
+      } catch (err) {
+        console.error(err);
+      }
+      execute(cmd, (output) => {
+        console.log(output);
+      });
+      let delayres = await delay(3000);
+    }
+    if (config.hasOwnProperty('app_bin') && config.app_bin.length > 1) {
+      content = content + 'loadfile ' + config.app_bin + '\n' + 'exit\n';
+      try {
+        fs.writeFileSync(configFilePath, content);
+        // file written successfully
+      } catch (err) {
+        console.error(err);
+      }
+      execute(cmd, (output) => {
+        console.log(output);
+      });
+      let delayres = await delay(3000);
+    }
   })
 
-  const menu = Menu.buildFromTemplate([
-    {
-      label: app.name,
-      submenu: [
-        {
-          click: () => win.webContents.send('update-counter', 1),
-          label: 'Increment',
-        },
-        {
-          click: () => win.webContents.send('update-counter', -1),
-          label: 'Decrement',
-        }
-      ]
-    }
+  // const menu = Menu.buildFromTemplate([
+  //   {
+  //     label: app.name,
+  //     submenu: [
+  //       {
+  //         click: () => win.webContents.send('update-counter', 1),
+  //         label: 'Increment',
+  //       },
+  //       {
+  //         click: () => win.webContents.send('update-counter', -1),
+  //         label: 'Decrement',
+  //       }
+  //     ]
+  //   }
+  //
+  // ])
 
-  ])
-
-  Menu.setApplicationMenu(menu)
+  // Menu.setApplicationMenu(menu)
 
 
   if (app.isPackaged) {
